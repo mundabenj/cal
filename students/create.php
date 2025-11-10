@@ -19,27 +19,43 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 // get the raw POST data
-$requestBody = file_get_contents('php://input');
+$requestBody = file_get_contents('php://input'); // get the JSON raw POST data
 
 // decode the JSON data
 $JSONData = json_decode($requestBody, true);
 
-// retreive data from a form
+// retreive data from a form-data submission
 $FORMData = [
     'fullname'=> trim($_POST['fullname'] ?? ''),
     'email'=> trim($_POST['email'] ?? '')
 ];
 
+// determine which data to use: JSON or form-data (JSON takes precedence)
 if(!empty($JSONData)) {
     $StudentData = $JSONData;
 } else {
     $StudentData = $FORMData;
 }
 
+// validate required fields
 if(empty($StudentData['fullname']) || empty($StudentData['email'])) {
     $response = [
         'status'=> http_response_code(400), // Bad Request
-        'message'=> 'Invalid input. Name, email, and age are required.'
+        'message'=> 'Missing required input. FullName and email are required.'
+    ];
+    echo json_encode($response);
+    exit;
+}
+
+// sanitize input data
+$StudentData['fullname'] = addslashes($StudentData['fullname']);
+$StudentData['email'] = filter_var($StudentData['email'], FILTER_SANITIZE_EMAIL);
+
+// validate email format
+if (!filter_var($StudentData['email'], FILTER_VALIDATE_EMAIL)) {
+    $response = [
+        'status'=> http_response_code(400), // Bad Request
+        'message'=> 'Invalid email format.'
     ];
     echo json_encode($response);
     exit;
@@ -56,7 +72,7 @@ try {
             'status'=> http_response_code(201), // Created
             'message'=> 'Student created successfully.',
             'data'=> [
-                'id'=> $pdo->lastInsertId(),
+                'userId'=> $pdo->lastInsertId(),
                 'fullname'=> $StudentData['fullname'],
                 'email'=> $StudentData['email']
             ]
