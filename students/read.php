@@ -21,7 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
 // use if to fetch  a single student by userId or all students
 if(isset($_GET['userId']) && is_numeric($_GET['userId']) && $_GET['userId'] != '') {
     // fetch a single student
-    $userId = intval($_GET['userId']);
+    $userId = intval($_GET['userId']); // sanitize userId input
 
     try{
         // prepare the SQL statement
@@ -36,7 +36,7 @@ if(isset($_GET['userId']) && is_numeric($_GET['userId']) && $_GET['userId'] != '
             $response = [
                 'status'=> http_response_code(200), // OK
                 'message'=> 'Single student fetched successfully.',
-                'data'=> $studentData
+                'data'=> $studentData // the student data
             ];
             echo json_encode($response);
             exit;
@@ -58,19 +58,17 @@ if(isset($_GET['userId']) && is_numeric($_GET['userId']) && $_GET['userId'] != '
     }
 }else {
     // fetch all students
-
     try{
         $stmt = $pdo->prepare('SELECT * FROM users'); // prepare the SQL statement
         $stmt->execute(); // execute the statement
 
         $rowCount = $stmt->rowCount();
         if($rowCount > 0) {
-            $studentData = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
+            $studentData = $stmt->fetchAll(PDO::FETCH_ASSOC); // fetch all student data
             $response = [
                 'status'=> http_response_code(200), // OK
                 'message'=> 'All students fetched successfully.',
-                'data'=> $studentData
+                'data'=> $studentData // the student data
             ];
             echo json_encode($response);
             exit;
@@ -85,7 +83,7 @@ if(isset($_GET['userId']) && is_numeric($_GET['userId']) && $_GET['userId'] != '
     }  catch (PDOException $e) {
         $response = [
             'status'=> http_response_code(500), // Internal Server Error
-            'message'=> 'An error occurred while fetching student data.' . $e->getMessage()
+            'message'=> 'An error occurred while fetching student data.' . $e->getMessage() // detailed error message
         ];
         echo json_encode($response);
         exit;
